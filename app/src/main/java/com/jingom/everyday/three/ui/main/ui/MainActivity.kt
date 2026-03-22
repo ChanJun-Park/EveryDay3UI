@@ -7,9 +7,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -21,13 +23,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jingom.everyday.three.ui.main.logic.MainViewModel
 import com.jingom.everyday.three.ui.ui.theme.EveryDay3UITheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+	private val viewModel by viewModels<MainViewModel>()
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		// ⚠️ super.onCreate() 보다 먼저 호출해야 합니다!
 		val splashScreen = installSplashScreen()
@@ -37,7 +45,7 @@ class MainActivity : ComponentActivity() {
 		// keepOnScreen이 true인 동안 Splash가 화면에 유지됩니다
 		splashScreen.setKeepOnScreenCondition {
 			// 예: ViewModel의 로딩 상태가 완료되면 false 반환 → Splash 종료
-			false // 여기서는 즉시 종료
+			!viewModel.initialized.value
 		}
 
 		// Splash가 사라질 때 커스텀 애니메이션 적용
@@ -74,14 +82,12 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(
+	modifier: Modifier = Modifier,
+	viewModel: MainViewModel = hiltViewModel(),
+) {
 	// 앱 진입 시 페이드인 효과를 위한 알파 애니메이션 상태
-	var visible by remember { mutableStateOf(false) }
-
-	// 컴포저블이 화면에 나타나자마자 visible을 true로 변경
-	LaunchedEffect(Unit) {
-		visible = true
-	}
+	val visible by viewModel.initialized.collectAsStateWithLifecycle()
 
 	// AnimatedVisibility: visible 상태에 따라 부드럽게 등장/퇴장 처리
 	AnimatedVisibility(
@@ -90,7 +96,13 @@ fun MainScreen(modifier: Modifier = Modifier) {
 		modifier = modifier,
 	) {
 		// 실제 메인 화면 콘텐츠
-		Greeting("android")
+		Greeting(
+			name = "android",
+			modifier =
+				Modifier
+					.fillMaxSize()
+					.background(color = Color.Red)
+		)
 	}
 }
 
