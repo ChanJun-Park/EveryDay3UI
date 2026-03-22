@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<style name="Theme.EveryDay3UI" parent="android:Theme.Material.Light.NoActionBar" />
+
+	<!-- Splash 전용 테마: 앱이 실행되자마자 이 테마가 적용됩니다 -->
+	<style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
+		<!-- 가운데 보여질 아이콘 -->
+		<item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+		<!-- 아이콘 배경 색상 (선택사항) -->
+		<item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+		<!-- Splash 배경 색상 -->
+		<item name="windowSplashScreenBackground">@color/white</item>
+		<!-- Splash가 끝난 후 적용될 앱 기본 테마 -->
+		<item name="postSplashScreenTheme">@style/Theme.EveryDay3UI</item>
+	</style>
+</resources>
