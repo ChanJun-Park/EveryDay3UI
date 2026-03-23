@@ -8,9 +8,7 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun CalendarScreen(modifier: Modifier = Modifier) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "calendar",
-        )
+    Box(modifier = modifier.fillMaxSize()) {
+        CalendarMonthPager()
     }
 }

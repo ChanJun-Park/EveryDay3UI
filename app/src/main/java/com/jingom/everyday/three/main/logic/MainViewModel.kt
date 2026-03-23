@@ -19,7 +19,7 @@ class MainViewModel
 
         init {
             viewModelScope.launch {
-                delay(5000)
+                delay(3000)
                 _initialized.update { true }
             }
         }
