@@ -16,16 +16,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,9 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.jingom.everyday.three.calendar.logic.pageToYearMonth
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlin.math.absoluteValue
 
 @Composable
@@ -86,6 +96,7 @@ fun CalendarMonthPager(modifier: Modifier = Modifier) {
 	}
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MonthHeader(
 	pagerState: PagerState,
@@ -93,10 +104,13 @@ private fun MonthHeader(
 	currentYearMonth: YearMonth,
 	modifier: Modifier = Modifier,
 ) {
+	var datePickerVisible by remember { mutableStateOf(false) }
 	val coroutineScope = rememberCoroutineScope()
 	Row(
 		horizontalArrangement = Arrangement.SpaceBetween,
-		modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)
+		modifier = modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp)
 	) {
 		// 이전 달 버튼
 		IconButton(onClick = {
@@ -108,13 +122,7 @@ private fun MonthHeader(
 			Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 달")
 		}
 
-		// 현재 월 텍스트 클릭 시 오늘로 이동
-		TextButton(onClick = {
-			coroutineScope.launch {
-				// scrollToPage: 애니메이션 없이 즉시 이동 (멀리 있을 때 유용)
-				pagerState.scrollToPage(initialPage)
-			}
-		}) {
+		TextButton(onClick = { datePickerVisible = true }) {
 			Text(
 				text = currentYearMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월")),
 				style = MaterialTheme.typography.titleMedium
@@ -128,6 +136,52 @@ private fun MonthHeader(
 			}
 		}) {
 			Icon(Icons.Default.KeyboardArrowRight, contentDescription = "다음 달")
+		}
+	}
+
+	if (datePickerVisible) {
+		// DatePickerState: 날짜 선택 UI의 상태를 관리
+		// initialSelectedDateMillis: 초기 선택 날짜 (null이면 선택 없음)
+		// yearRange: 선택 가능한 연도 범위
+		val datePickerState = rememberDatePickerState(
+			initialSelectedDateMillis = System.currentTimeMillis(),
+			yearRange = IntRange(2020, 2030)
+		)
+
+		DatePickerDialog(
+			onDismissRequest = { datePickerVisible = false },
+			// confirmButton: 확인 버튼 슬롯
+			confirmButton = {
+				TextButton(
+					onClick = {
+						// selectedDateMillis: 사용자가 선택한 날짜 (UTC milliseconds)
+						datePickerState.selectedDateMillis?.let {
+							val selectedDate = LocalDateTime.ofEpochSecond(it / 1000L, 0, ZoneOffset.UTC).toLocalDate()
+							val selectedYearMonth = YearMonth.of(selectedDate.year, selectedDate.month)
+							val today = YearMonth.now()
+							val monthOffset = ChronoUnit.MONTHS.between(today, selectedYearMonth)
+							val targetPage = initialPage + monthOffset
+							coroutineScope.launch {
+								pagerState.scrollToPage(targetPage.toInt())
+							}
+						}
+						datePickerVisible = false
+					},
+					enabled = datePickerState.selectedDateMillis != null // 날짜 선택 안 하면 비활성화
+				) {
+					Text("확인")
+				}
+			},
+			dismissButton = {
+				TextButton(onClick = { datePickerVisible = false }) {
+					Text("취소")
+				}
+			},
+		) {
+			// DatePicker: 다이얼로그 내부에 배치되는 실제 날짜 선택 UI
+			DatePicker(
+				state = datePickerState,
+			)
 		}
 	}
 }
@@ -156,7 +210,9 @@ private fun MonthCalendarGrid(
 		Row(modifier = Modifier.fillMaxWidth()) {
 			dayLabels.forEachIndexed { index, label ->
 				Box(
-					modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+					modifier = Modifier
+						.weight(1f)
+						.padding(vertical = 4.dp),
 					contentAlignment = Alignment.Center,
 				) {
 					Text(
@@ -178,7 +234,9 @@ private fun MonthCalendarGrid(
 				repeat(7) { col ->
 					val day = row * 7 + col - startOffset + 1
 					Box(
-						modifier = Modifier.weight(1f).padding(2.dp),
+						modifier = Modifier
+							.weight(1f)
+							.padding(2.dp),
 						contentAlignment = Alignment.Center,
 					) {
 						if (day in 1..daysInMonth) {
