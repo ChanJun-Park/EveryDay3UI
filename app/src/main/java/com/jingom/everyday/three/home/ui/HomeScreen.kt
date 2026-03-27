@@ -2,6 +2,9 @@ package com.jingom.everyday.three.home.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.TextAutoSizeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,7 +31,10 @@ fun HomeScreen(
 		} else {
 			// 로딩 완료: 실제 데이터 표시
 			items(5) { post ->
-				Text("real data dummy")
+				BasicText(
+					text = "real data dummy",
+					autoSize = TextAutoSize.StepBased(),
+				)
 			}
 		}
 	}

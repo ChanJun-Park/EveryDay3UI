@@ -1,6 +1,9 @@
 package com.jingom.everyday.three.calendar.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +17,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.DatePicker
@@ -35,12 +40,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.jingom.everyday.three.calendar.logic.pageToYearMonth
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -96,6 +101,26 @@ fun CalendarMonthPager(modifier: Modifier = Modifier) {
 	}
 }
 
+@Composable
+fun MonthTitle(
+	currentYearMonth: YearMonth,
+	modifier: Modifier = Modifier,
+) {
+	// targetState가 바뀔 때마다 전환 애니메이션 실행
+	AnimatedContent(
+		targetState = currentYearMonth,
+		label = "month_title_animation",
+		modifier = modifier,
+	) { yearMonth ->
+		// 이 블록은 targetState가 바뀔 때마다 새로 실행됨
+		// yearMonth: 현재 애니메이션 중인 YearMonth (이전 값 또는 새 값)
+		Text(
+			text = yearMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월")),
+			style = MaterialTheme.typography.titleLarge,
+		)
+	}
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MonthHeader(
@@ -122,12 +147,12 @@ private fun MonthHeader(
 			Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "이전 달")
 		}
 
-		TextButton(onClick = { datePickerVisible = true }) {
-			Text(
-				text = currentYearMonth.format(DateTimeFormatter.ofPattern("yyyy년 M월")),
-				style = MaterialTheme.typography.titleMedium
-			)
-		}
+		MonthTitle(
+			currentYearMonth = currentYearMonth,
+			modifier = Modifier.clickable {
+				datePickerVisible = true
+			}
+		)
 
 		// 다음 달 버튼
 		IconButton(onClick = {
